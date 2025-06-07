@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Main Module",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "GOOGLE_CLOUD_PROJECT": "your-dev-project-id"
+      }
+    },
+    {
+      "name": "Python: Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "-v"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}

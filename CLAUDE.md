@@ -64,3 +64,42 @@ Data deduplication is handled via BigQuery MERGE statements using date + securit
 - API keys stored in Google Cloud Secret Manager
 - Minimal IAM permissions for Cloud Run service accounts
 - No sensitive information in code or version control
+
+## Development Commands
+
+Since this project is in early development phase with planned Python implementation, common commands will be:
+
+### Python Development
+- `python -m pytest tests/` - Run unit tests
+- `python -m black src/` - Format code with Black
+- `python -m flake8 src/` - Lint code with Flake8
+- `python -m mypy src/` - Type checking with MyPy
+
+### Infrastructure Management  
+- `cd terraform/environments/dev && terraform plan` - Plan infrastructure changes
+- `cd terraform/environments/dev && terraform apply` - Apply infrastructure changes
+- `./scripts/init.sh dev <project-id>` - Initialize environment
+- `./scripts/deploy.sh dev <project-id> apply` - Deploy infrastructure
+
+### Local Development
+- `python src/main.py` - Run local development server
+- `docker build -t stock-data-collector .` - Build container image
+
+## Code Architecture
+
+The planned architecture follows a modular design:
+
+### Source Structure
+- `src/main.py` - Cloud Run entry point handling Pub/Sub messages
+- `src/services/` - External service clients (J-Quants API, BigQuery, Secret Manager)
+- `src/models/` - Data models and schemas for stock price data
+- `src/utils/` - Shared utilities (logging, retry logic, date handling)
+
+### Key Integration Points
+- **J-Quants API Client**: Handles authentication, rate limiting, and data fetching
+- **BigQuery Client**: Manages data persistence with MERGE operations for idempotency  
+- **Secret Manager**: Securely retrieves API credentials at runtime
+- **Pub/Sub Handler**: Processes scheduled triggers and validates business days
+
+### Data Flow
+Cloud Scheduler → Pub/Sub → Cloud Run → (Secret Manager + J-Quants API + BigQuery)

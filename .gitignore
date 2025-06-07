@@ -202,3 +202,19 @@ terraform.tfstate.backup
 
 # Project specific
 template_repo/
+
+# Environment files
+.env.local
+.env.*.local
+
+# Secret files
+*.pem
+*.key
+secrets/
+
+# Google Cloud service accounts
+gcloud-key.json
+service-account.json
+
+# Terraform lock files
+.terraform.lock.hcl

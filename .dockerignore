@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+docs/
+*.md
+
+# Environment files
+.env
+.env.*
+
+# Tests
+tests/
+*_test.py
+test_*.py
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Terraform
+terraform/
+*.tf
+*.tfstate
+*.tfvars
+.terraform/
+
+# macOS
+.DS_Store
+
+# Development files
+*.log
+.coverage
+htmlcov/
+
+# Build artifacts
+build/
+dist/

@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.flake8",
+    "ms-python.mypy-type-checker",
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "ms-vscode.vscode-json",
+    "hashicorp.terraform",
+    "ms-vscode.vscode-yaml",
+    "github.vscode-github-actions"
+  ]
+}

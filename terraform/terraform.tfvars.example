@@ -1,0 +1,38 @@
+# Example Terraform variables file
+# Copy this file to terraform.tfvars and fill in your values
+
+project_id = "your-gcp-project-id"
+region     = "asia-northeast1"
+environment = "dev"
+
+# BigQuery
+bigquery_dataset_id = "stock_data_dev"
+bigquery_table_id   = "daily_stock_prices"
+bigquery_location   = "asia-northeast1"
+dataset_owner_email = "your-email@example.com"
+
+# Cloud Run
+cloud_run_service_name = "stock-data-collector-dev"
+container_image        = "gcr.io/your-project-id/stock-data-collector:latest"
+cpu_limit              = "1"
+memory_limit           = "1Gi"
+timeout_seconds        = 1800
+log_level              = "INFO"
+
+# Pub/Sub
+pubsub_topic_name        = "stock-data-trigger"
+pubsub_subscription_name = "stock-data-processor"
+
+# Cloud Scheduler
+scheduler_job_name = "daily-stock-data"
+schedule           = "30 16 * * 1-5"  # 16:30 JST on weekdays
+
+# Secret Manager
+jquants_secret_id = "jquants-refresh-token"
+
+# Labels
+labels = {
+  environment = "dev"
+  project     = "stock-data-collector"
+  managed_by  = "terraform"
+}
