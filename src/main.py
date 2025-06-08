@@ -45,8 +45,11 @@ def process_stock_data(target_date: date, force: bool = False) -> Dict[str, Any]
     # Initialize clients
     try:
         # Initialize service clients
+        logger.info(f"Initialize SecretManager Client")
         secret_client = SecretManagerClient(settings.project_id)
+        logger.info(f"Initialize J-Quants API Client")
         jquants_client = JQuantsClient(settings.jquants_base_url, settings.timeout_seconds)
+        logger.info(f"Initialize BigQuery Client")
         bigquery_client = BigQueryClient(
             settings.project_id,
             settings.bigquery_dataset,
