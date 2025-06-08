@@ -11,9 +11,14 @@ google-cloud-logging==3.9.0
 # HTTP and API dependencies
 requests==2.31.0
 tenacity==8.2.3
+jquants-api-client==1.8.0
 
 # Date and time handling
 jpholiday==0.1.9
+python-dateutil==2.8.2
+
+# Data processing
+pandas==2.1.4
 
 # Data validation
 pydantic==2.5.3

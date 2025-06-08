@@ -2,11 +2,9 @@
 import os
 import json
 import base64
-import logging
 from datetime import date, datetime
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 from flask import Flask, request, jsonify
-
 from config.settings import settings
 from services.jquants_client import JQuantsClient, JQuantsAPIError
 from services.bigquery_client import BigQueryClient, BigQueryError
@@ -17,6 +15,7 @@ from utils.date_utils import (
     get_latest_business_day,
     parse_date_string
 )
+import jquantsapi
 
 # Set up logging
 logger = setup_logging(settings.log_level)
@@ -29,20 +28,20 @@ def decode_pubsub_message(envelope: Dict[str, Any]) -> Dict[str, Any]:
     """Decode Pub/Sub message from request."""
     if not envelope:
         raise ValueError("No Pub/Sub message received")
-    
+
     pubsub_message = envelope.get("message", {})
-    
+
     if isinstance(pubsub_message, dict) and "data" in pubsub_message:
         data = base64.b64decode(pubsub_message["data"]).decode("utf-8")
         return json.loads(data)
-    
+
     return {}
 
 
 def process_stock_data(target_date: date, force: bool = False) -> Dict[str, Any]:
     """Process stock data for a specific date."""
     logger.info(f"Processing stock data for date: {target_date}")
-    
+
     # Initialize clients
     try:
         # Initialize service clients
@@ -54,11 +53,11 @@ def process_stock_data(target_date: date, force: bool = False) -> Dict[str, Any]
             settings.bigquery_table,
             settings.bigquery_location
         )
-        
+
         # Ensure BigQuery resources exist
         bigquery_client.ensure_dataset_exists()
         bigquery_client.ensure_table_exists()
-        
+
     except Exception as e:
         logger.error(f"Failed to initialize clients: {str(e)}")
         return {
@@ -66,7 +65,7 @@ def process_stock_data(target_date: date, force: bool = False) -> Dict[str, Any]
             "message": f"Failed to initialize clients: {str(e)}",
             "date": target_date.isoformat()
         }
-    
+
     # Check if it's a business day (unless forced)
     if not force and not is_japanese_business_day(target_date):
         logger.info(f"{target_date} is not a Japanese business day, skipping")
@@ -75,7 +74,7 @@ def process_stock_data(target_date: date, force: bool = False) -> Dict[str, Any]
             "message": f"{target_date} is not a business day",
             "date": target_date.isoformat()
         }
-    
+
     # Check if data already exists (unless forced)
     if not force:
         try:
@@ -88,7 +87,7 @@ def process_stock_data(target_date: date, force: bool = False) -> Dict[str, Any]
                 }
         except Exception as e:
             logger.warning(f"Failed to check existing data: {str(e)}")
-    
+
     # Get J-Quants API credentials
     try:
         # Try to get refresh token from Secret Manager

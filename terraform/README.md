@@ -40,6 +40,7 @@ terraform/
 
 ```bash
 cd terraform/scripts
+export GOOGLE_APPLICATION_CREDENTIALS=/workspace/service-account.json
 ./init.sh dev YOUR_PROJECT_ID your-email@example.com
 ```
 

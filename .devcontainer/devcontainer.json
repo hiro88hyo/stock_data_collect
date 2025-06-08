@@ -16,7 +16,8 @@
         "hashicorp.terraform",
         "ms-vscode.vscode-yaml",
         "github.vscode-github-actions",
-        "ms-vscode.remote-containers"
+        "ms-vscode.remote-containers",
+        "anthropic.claude-code"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
@@ -58,6 +59,9 @@
       "version": "latest"
     },
     "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    },
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {
       "version": "latest"
     }
   }

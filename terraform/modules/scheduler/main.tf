@@ -48,6 +48,4 @@ resource "google_cloud_scheduler_job" "daily_stock_data" {
   retry_config {
     retry_count = 1
   }
-
-  labels = var.labels
 }

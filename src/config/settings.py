@@ -12,29 +12,29 @@ if os.getenv("ENVIRONMENT", "development") == "development":
 @dataclass
 class Settings:
     """Application settings."""
-    
+
     # Google Cloud
     project_id: str
     bigquery_dataset: str
     bigquery_table: str
     bigquery_location: str
-    
+
     # J-Quants API
     jquants_base_url: str
     jquants_refresh_token_secret: str
     jquants_email: Optional[str] = None
     jquants_password: Optional[str] = None
-    
+
     # Application settings
     log_level: str = "INFO"
     retry_max_attempts: int = 3
     timeout_seconds: int = 30
-    
+
     # Development settings
     environment: str = "development"
     debug: bool = False
     port: int = 8080
-    
+
     @classmethod
     def from_env(cls) -> "Settings":
         """Load settings from environment variables."""

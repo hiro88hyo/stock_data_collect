@@ -21,7 +21,7 @@ echo "Dataset Owner: $DATASET_OWNER_EMAIL"
 echo "Action: $ACTION"
 echo "===================="
 
-cd environments/$ENVIRONMENT
+cd ../environments/$ENVIRONMENT
 
 # Ensure terraform is initialized
 if [ ! -d ".terraform" ]; then

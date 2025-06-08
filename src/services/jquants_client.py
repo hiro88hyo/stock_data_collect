@@ -1,13 +1,12 @@
-"""J-Quants API client implementation."""
+"""J-Quants API client implementation using official jquants-api-client library."""
 import logging
-from typing import List, Dict, Optional, Any
-from datetime import date
-import requests
-from requests.exceptions import HTTPError
+from typing import List, Optional
+from datetime import date, datetime
+from dateutil import tz
+import jquantsapi
 
-from ..utils.retry import api_retry
-from ..utils.date_utils import format_date_for_api
-from ..models.stock_data import StockPrice
+from utils.retry import api_retry
+from models.stock_data import StockPrice
 
 logger = logging.getLogger("stock_data_collector")
 
@@ -18,36 +17,29 @@ class JQuantsAPIError(Exception):
 
 
 class JQuantsClient:
-    """Client for J-Quants API."""
+    """Client for J-Quants API using official jquants-api-client library."""
     
-    def __init__(self, base_url: str, timeout: int = 30):
-        """Initialize J-Quants client."""
-        self.base_url = base_url.rstrip("/")
-        self.timeout = timeout
-        self.access_token: Optional[str] = None
-        self.session = requests.Session()
-        self.session.headers.update({
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        })
+    def __init__(self, mail_address: Optional[str] = None, password: Optional[str] = None, refresh_token: Optional[str] = None):
+        """Initialize J-Quants client with official library."""
+        self.client: Optional[jquantsapi.Client] = None
+        self.mail_address = mail_address
+        self.password = password
+        self.refresh_token = refresh_token
     
-    def authenticate(self, refresh_token: str) -> None:
-        """Authenticate with J-Quants API using refresh token."""
+    def authenticate(self, refresh_token: Optional[str] = None) -> None:
+        """Authenticate with J-Quants API using refresh token or credentials."""
         logger.info("Authenticating with J-Quants API")
         
         try:
-            response = self._make_request(
-                "POST",
-                "/token/auth_refresh",
-                params={"refreshtoken": refresh_token}
-            )
+            if refresh_token:
+                self.client = jquantsapi.Client(refresh_token=refresh_token)
+            elif self.refresh_token:
+                self.client = jquantsapi.Client(refresh_token=self.refresh_token)
+            elif self.mail_address and self.password:
+                self.client = jquantsapi.Client(mail_address=self.mail_address, password=self.password)
+            else:
+                raise JQuantsAPIError("No authentication credentials provided")
             
-            self.access_token = response.get("idToken")
-            if not self.access_token:
-                raise JQuantsAPIError("No access token received from API")
-            
-            # Update session headers with token
-            self.session.headers["Authorization"] = f"Bearer {self.access_token}"
             logger.info("Successfully authenticated with J-Quants API")
             
         except Exception as e:
@@ -59,13 +51,9 @@ class JQuantsClient:
         logger.info("Authenticating with J-Quants API using credentials")
         
         try:
-            response = self._make_request(
-                "POST",
-                "/token/auth_user",
-                json={"mailaddress": email, "password": password}
-            )
+            temp_client = jquantsapi.Client(mail_address=email, password=password)
+            refresh_token = temp_client.get_refresh_token()
             
-            refresh_token = response.get("refreshToken")
             if not refresh_token:
                 raise JQuantsAPIError("No refresh token received from API")
             
@@ -79,80 +67,47 @@ class JQuantsClient:
     @api_retry
     def fetch_daily_quotes(self, target_date: date, code: Optional[str] = None) -> List[StockPrice]:
         """Fetch daily stock quotes for a specific date."""
-        if not self.access_token:
+        if not self.client:
             raise JQuantsAPIError("Not authenticated. Call authenticate() first.")
         
-        date_str = format_date_for_api(target_date)
-        logger.info(f"Fetching daily quotes for date: {date_str}")
-        
-        params = {"date": date_str}
-        if code:
-            params["code"] = code
+        logger.info(f"Fetching daily quotes for date: {target_date}")
         
         try:
-            response = self._make_request("GET", "/prices/daily_quotes", params=params)
+            # Convert date to datetime with Tokyo timezone for jquants-api-client
+            dt_start = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=tz.gettz("Asia/Tokyo"))
+            dt_end = datetime.combine(target_date, datetime.max.time()).replace(tzinfo=tz.gettz("Asia/Tokyo"))
             
-            # Response should contain 'daily_quotes' key with list of quotes
-            quotes_data = response.get("daily_quotes", [])
-            logger.info(f"Received {len(quotes_data)} quotes for {date_str}")
+            # Use get_prices_daily_quotes for single date or get_price_range for date range
+            if code:
+                df = self.client.get_prices_daily_quotes(code=code, date=target_date.strftime("%Y-%m-%d"))
+            else:
+                df = self.client.get_price_range(start_dt=dt_start, end_dt=dt_end)
             
-            # Convert to StockPrice objects
+            if df is None or df.empty:
+                logger.warning(f"No data available for date: {target_date}")
+                return []
+            
+            logger.info(f"Received {len(df)} quotes for {target_date}")
+            
+            # Convert DataFrame to StockPrice objects
             stock_prices = []
-            for quote in quotes_data:
+            for _, row in df.iterrows():
                 try:
-                    stock_price = StockPrice.from_jquants_response(quote, target_date)
+                    stock_price = StockPrice.from_dataframe_row(row, target_date)
                     stock_prices.append(stock_price)
                 except Exception as e:
-                    logger.warning(f"Failed to parse quote for {quote.get('Code', 'Unknown')}: {str(e)}")
+                    logger.warning(f"Failed to parse quote for {row.get('Code', 'Unknown')}: {str(e)}")
                     continue
             
             logger.info(f"Successfully parsed {len(stock_prices)} stock prices")
             return stock_prices
             
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                logger.warning(f"No data available for date: {date_str}")
-                return []
-            raise
         except Exception as e:
             logger.error(f"Failed to fetch daily quotes: {str(e)}")
             raise JQuantsAPIError(f"Failed to fetch daily quotes: {str(e)}") from e
     
-    def _make_request(
-        self,
-        method: str,
-        endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        """Make HTTP request to J-Quants API."""
-        url = f"{self.base_url}{endpoint}"
-        
-        logger.debug(f"Making {method} request to {url}")
-        
-        response = self.session.request(
-            method=method,
-            url=url,
-            params=params,
-            json=json,
-            timeout=self.timeout
-        )
-        
-        # Check for HTTP errors
-        try:
-            response.raise_for_status()
-        except HTTPError as e:
-            error_msg = f"HTTP {response.status_code}: {response.text}"
-            logger.error(f"API request failed: {error_msg}")
-            raise HTTPError(error_msg) from e
-        
-        # Parse JSON response
-        try:
-            return response.json()
-        except ValueError as e:
-            logger.error(f"Failed to parse JSON response: {response.text}")
-            raise JQuantsAPIError(f"Invalid JSON response: {response.text}") from e
-    
     def close(self):
-        """Close the session."""
-        self.session.close()
+        """Close the client."""
+        if self.client:
+            # The official jquants-api-client doesn't require explicit closing
+            self.client = None

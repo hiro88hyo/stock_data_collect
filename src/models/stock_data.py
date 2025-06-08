@@ -52,3 +52,19 @@ class StockPrice:
             volume=data.get("Volume"),
             turnover_value=Decimal(str(data.get("TurnoverValue"))) if data.get("TurnoverValue") is not None else None
         )
+    
+    @classmethod
+    def from_dataframe_row(cls, row, target_date: date) -> "StockPrice":
+        """Create instance from pandas DataFrame row (jquants-api-client response)."""
+        return cls(
+            date=target_date,
+            security_code=str(row.get("Code", "")),
+            security_name=str(row.get("CompanyName", "")),
+            market_code=str(row.get("MarketCode", "")),
+            open_price=Decimal(str(row.get("Open"))) if row.get("Open") is not None and str(row.get("Open")) != "nan" else None,
+            high_price=Decimal(str(row.get("High"))) if row.get("High") is not None and str(row.get("High")) != "nan" else None,
+            low_price=Decimal(str(row.get("Low"))) if row.get("Low") is not None and str(row.get("Low")) != "nan" else None,
+            close_price=Decimal(str(row.get("Close"))) if row.get("Close") is not None and str(row.get("Close")) != "nan" else None,
+            volume=int(row.get("Volume")) if row.get("Volume") is not None and str(row.get("Volume")) != "nan" else None,
+            turnover_value=Decimal(str(row.get("TurnoverValue"))) if row.get("TurnoverValue") is not None and str(row.get("TurnoverValue")) != "nan" else None
+        )

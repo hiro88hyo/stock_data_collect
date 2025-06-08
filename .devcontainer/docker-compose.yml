@@ -9,24 +9,25 @@ services:
       - ..:/workspace:cached
       - ~/.gcloud:/home/vscode/.config/gcloud:cached
       - ~/.ssh:/home/vscode/.ssh:cached
+      - ~/.claude:/home/vscode/.claude:cached
     command: sleep infinity
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/workspace/service-account-key.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/workspace/service-account.json
       - GOOGLE_CLOUD_PROJECT=your-dev-project-id
     networks:
       - dev-network
 
-  # Optional: Local BigQuery emulator for testing
-  # bigquery-emulator:
-  #   image: ghcr.io/goccy/bigquery-emulator:latest
-  #   ports:
-  #     - "9050:9050"
-  #   environment:
-  #     - PORT=9050
-  #     - PROJECT=test-project
-  #     - DATASET=test_dataset
-  #   networks:
-  #     - dev-network
+# Optional: Local BigQuery emulator for testing
+# bigquery-emulator:
+#   image: ghcr.io/goccy/bigquery-emulator:latest
+#   ports:
+#     - "9050:9050"
+#   environment:
+#     - PORT=9050
+#     - PROJECT=test-project
+#     - DATASET=test_dataset
+#   networks:
+#     - dev-network
 
 networks:
   dev-network:

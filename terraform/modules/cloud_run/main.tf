@@ -4,10 +4,10 @@ resource "google_cloud_run_v2_service" "stock_data_collector" {
 
   template {
     service_account = var.service_account_email
-    
+
     containers {
       image = var.container_image
-      
+
       resources {
         limits = {
           cpu    = var.cpu_limit
@@ -60,11 +60,6 @@ resource "google_cloud_run_v2_service" "stock_data_collector" {
         value = "30"
       }
 
-      env {
-        name  = "PORT"
-        value = "8080"
-      }
-
       ports {
         container_port = 8080
       }
@@ -92,7 +87,7 @@ resource "google_cloud_run_v2_service" "stock_data_collector" {
     }
 
     timeout = "${var.timeout_seconds}s"
-    
+
     scaling {
       max_instance_count = 1
       min_instance_count = 0

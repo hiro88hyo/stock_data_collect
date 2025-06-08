@@ -4,7 +4,7 @@ from typing import Optional
 from google.cloud import secretmanager
 from google.api_core import exceptions
 
-from ..utils.retry import default_retry
+from utils.retry import default_retry
 
 logger = logging.getLogger("stock_data_collector")
 

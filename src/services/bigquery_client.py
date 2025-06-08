@@ -5,8 +5,8 @@ from datetime import date
 from google.cloud import bigquery
 from google.cloud.exceptions import GoogleCloudError
 
-from ..models.stock_data import StockPrice
-from ..utils.retry import default_retry
+from models.stock_data import StockPrice
+from utils.retry import default_retry
 
 logger = logging.getLogger("stock_data_collector")
 

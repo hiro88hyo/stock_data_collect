@@ -40,7 +40,7 @@ gcloud services enable --project=$PROJECT_ID \
 
 # Initialize Terraform
 echo "Initializing Terraform..."
-cd environments/$ENVIRONMENT
+cd ../environments/$ENVIRONMENT
 terraform init \
   -backend-config="bucket=terraform-state-$PROJECT_ID"
 
