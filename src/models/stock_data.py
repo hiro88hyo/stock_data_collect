@@ -11,8 +11,6 @@ class StockPrice:
     
     date: date
     security_code: str
-    security_name: str
-    market_code: str
     open_price: Optional[Decimal]
     high_price: Optional[Decimal]
     low_price: Optional[Decimal]
@@ -25,8 +23,6 @@ class StockPrice:
         return {
             "date": self.date.isoformat(),
             "security_code": self.security_code,
-            "security_name": self.security_name,
-            "market_code": self.market_code,
             "open_price": float(self.open_price) if self.open_price is not None else None,
             "high_price": float(self.high_price) if self.high_price is not None else None,
             "low_price": float(self.low_price) if self.low_price is not None else None,
@@ -43,8 +39,6 @@ class StockPrice:
         return cls(
             date=target_date,
             security_code=data.get("Code", ""),
-            security_name=data.get("CompanyName", ""),
-            market_code=data.get("MarketCode", ""),
             open_price=Decimal(str(data.get("Open"))) if data.get("Open") is not None else None,
             high_price=Decimal(str(data.get("High"))) if data.get("High") is not None else None,
             low_price=Decimal(str(data.get("Low"))) if data.get("Low") is not None else None,
@@ -59,8 +53,6 @@ class StockPrice:
         return cls(
             date=target_date,
             security_code=str(row.get("Code", "")),
-            security_name=str(row.get("CompanyName", "")),
-            market_code=str(row.get("MarketCode", "")),
             open_price=Decimal(str(row.get("Open"))) if row.get("Open") is not None and str(row.get("Open")) != "nan" else None,
             high_price=Decimal(str(row.get("High"))) if row.get("High") is not None and str(row.get("High")) != "nan" else None,
             low_price=Decimal(str(row.get("Low"))) if row.get("Low") is not None and str(row.get("Low")) != "nan" else None,

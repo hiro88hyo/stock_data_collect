@@ -15,7 +15,6 @@ from utils.date_utils import (
     get_latest_business_day,
     parse_date_string
 )
-import jquantsapi
 
 # Set up logging
 logger = setup_logging(settings.log_level)
@@ -45,11 +44,11 @@ def process_stock_data(target_date: date, force: bool = False) -> Dict[str, Any]
     # Initialize clients
     try:
         # Initialize service clients
-        logger.info(f"Initialize SecretManager Client")
+        logger.info("Initialize SecretManager Client")
         secret_client = SecretManagerClient(settings.project_id)
-        logger.info(f"Initialize J-Quants API Client")
+        logger.info("Initialize J-Quants API Client")
         jquants_client = JQuantsClient(settings.jquants_base_url, settings.timeout_seconds)
-        logger.info(f"Initialize BigQuery Client")
+        logger.info("Initialize BigQuery Client")
         bigquery_client = BigQueryClient(
             settings.project_id,
             settings.bigquery_dataset,
@@ -154,6 +153,11 @@ def process_stock_data(target_date: date, force: bool = False) -> Dict[str, Any]
     finally:
         jquants_client.close()
     
+    # Debug: Show fetched data summary
+    logger.info(f"Fetched stock prices: {len(stock_prices)} records")
+    if stock_prices:
+        logger.debug(f"Sample record: {stock_prices[0]}")
+        logger.debug(f"Security codes: {', '.join(sp.security_code for sp in stock_prices[:5])}...")
     # Store data in BigQuery
     try:
         # Use MERGE for idempotent inserts

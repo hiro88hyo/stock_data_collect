@@ -1,5 +1,4 @@
 """Tests for stock data models."""
-import pytest
 from datetime import date
 from decimal import Decimal
 
@@ -14,8 +13,6 @@ class TestStockPrice:
         stock = StockPrice(
             date=date(2025, 6, 3),
             security_code="7203",
-            security_name="トヨタ自動車",
-            market_code="0111",
             open_price=Decimal("2500.0"),
             high_price=Decimal("2520.0"),
             low_price=Decimal("2480.0"),
@@ -26,7 +23,6 @@ class TestStockPrice:
         
         assert stock.date == date(2025, 6, 3)
         assert stock.security_code == "7203"
-        assert stock.security_name == "トヨタ自動車"
         assert stock.open_price == Decimal("2500.0")
         assert stock.volume == 1000000
     
@@ -35,8 +31,6 @@ class TestStockPrice:
         stock = StockPrice(
             date=date(2025, 6, 3),
             security_code="7203",
-            security_name="トヨタ自動車",
-            market_code="0111",
             open_price=Decimal("2500.0"),
             high_price=Decimal("2520.0"),
             low_price=Decimal("2480.0"),
@@ -59,8 +53,6 @@ class TestStockPrice:
         stock = StockPrice(
             date=date(2025, 6, 3),
             security_code="7203",
-            security_name="トヨタ自動車",
-            market_code="0111",
             open_price=None,
             high_price=None,
             low_price=None,
@@ -80,8 +72,6 @@ class TestStockPrice:
         response_data = {
             "Date": "2025-06-03",
             "Code": "7203",
-            "CompanyName": "トヨタ自動車",
-            "MarketCode": "0111",
             "Open": 2500.0,
             "High": 2520.0,
             "Low": 2480.0,
@@ -95,7 +85,6 @@ class TestStockPrice:
         
         assert stock.date == target_date
         assert stock.security_code == "7203"
-        assert stock.security_name == "トヨタ自動車"
         assert stock.open_price == Decimal("2500.0")
         assert stock.volume == 1000000
     
@@ -103,8 +92,6 @@ class TestStockPrice:
         """Test creating from J-Quants response with null values."""
         response_data = {
             "Code": "7203",
-            "CompanyName": "トヨタ自動車",
-            "MarketCode": "0111",
             "Open": None,
             "High": None,
             "Low": None,

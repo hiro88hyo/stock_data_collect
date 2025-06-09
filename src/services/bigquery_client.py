@@ -1,9 +1,10 @@
 """BigQuery client implementation."""
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List
 from datetime import date
+import json
+from io import StringIO
 from google.cloud import bigquery
-from google.cloud.exceptions import GoogleCloudError
 
 from models.stock_data import StockPrice
 from utils.retry import default_retry
@@ -76,8 +77,6 @@ class BigQueryClient:
             schema = [
                 bigquery.SchemaField("date", "DATE", mode="REQUIRED", description="Trading date"),
                 bigquery.SchemaField("security_code", "STRING", mode="REQUIRED", description="Security code"),
-                bigquery.SchemaField("security_name", "STRING", mode="NULLABLE", description="Security name"),
-                bigquery.SchemaField("market_code", "STRING", mode="NULLABLE", description="Market code"),
                 bigquery.SchemaField("open_price", "FLOAT64", mode="NULLABLE", description="Opening price"),
                 bigquery.SchemaField("high_price", "FLOAT64", mode="NULLABLE", description="Highest price"),
                 bigquery.SchemaField("low_price", "FLOAT64", mode="NULLABLE", description="Lowest price"),
@@ -147,15 +146,41 @@ class BigQueryClient:
         temp_table = f"{self.table_ref}_temp_{target_date.strftime('%Y%m%d')}"
         
         try:
-            # Create temporary table with data
-            job_config = bigquery.QueryJobConfig(
-                use_legacy_sql=False,
+            # Define the schema for the temporary table
+            schema = [
+                bigquery.SchemaField("date", "DATE", mode="REQUIRED"),
+                bigquery.SchemaField("security_code", "STRING", mode="REQUIRED"),
+                bigquery.SchemaField("open_price", "FLOAT64", mode="NULLABLE"),
+                bigquery.SchemaField("high_price", "FLOAT64", mode="NULLABLE"),
+                bigquery.SchemaField("low_price", "FLOAT64", mode="NULLABLE"),
+                bigquery.SchemaField("close_price", "FLOAT64", mode="NULLABLE"),
+                bigquery.SchemaField("volume", "INTEGER", mode="NULLABLE"),
+                bigquery.SchemaField("turnover_value", "FLOAT64", mode="NULLABLE"),
+                bigquery.SchemaField("created_at", "TIMESTAMP", mode="REQUIRED"),
+                bigquery.SchemaField("updated_at", "TIMESTAMP", mode="REQUIRED"),
+            ]
+            
+            # Create a file-like object with JSON data
+            json_data = "\n".join([json.dumps(row) for row in rows])
+            data_file = StringIO(json_data)
+            
+            # Configure the load job
+            job_config = bigquery.LoadJobConfig(
+                schema=schema,
+                source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
                 write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-                destination=temp_table
+                create_disposition=bigquery.CreateDisposition.CREATE_IF_NEEDED
             )
             
-            # Insert data into temporary table
-            self.client.insert_rows_json(temp_table, rows)
+            # Load data to temporary table
+            load_job = self.client.load_table_from_file(
+                data_file,
+                temp_table,
+                job_config=job_config
+            )
+            load_job.result()  # Wait for job to complete
+            
+            logger.info(f"Successfully loaded data to temporary table {temp_table}")
             
             # Execute MERGE statement
             merge_query = f"""
@@ -164,8 +189,6 @@ class BigQueryClient:
             ON target.date = source.date AND target.security_code = source.security_code
             WHEN MATCHED THEN
               UPDATE SET
-                security_name = source.security_name,
-                market_code = source.market_code,
                 open_price = source.open_price,
                 high_price = source.high_price,
                 low_price = source.low_price,
@@ -175,14 +198,14 @@ class BigQueryClient:
                 updated_at = CURRENT_TIMESTAMP()
             WHEN NOT MATCHED THEN
               INSERT (
-                date, security_code, security_name, market_code,
+                date, security_code,
                 open_price, high_price, low_price, close_price,
                 volume, turnover_value, created_at, updated_at
               )
               VALUES (
-                source.date, source.security_code, source.security_name, source.market_code,
+                source.date, source.security_code,
                 source.open_price, source.high_price, source.low_price, source.close_price,
-                source.volume, source.turnover_value, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()
+                source.volume, source.turnover_value, source.created_at, source.updated_at
               )
             """
             
@@ -199,6 +222,7 @@ class BigQueryClient:
             # Clean up temporary table
             try:
                 self.client.delete_table(temp_table, not_found_ok=True)
+                logger.info(f"Cleaned up temporary table {temp_table}")
             except Exception as e:
                 logger.warning(f"Failed to delete temporary table: {str(e)}")
     

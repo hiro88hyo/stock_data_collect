@@ -32,10 +32,13 @@ class JQuantsClient:
         
         try:
             if refresh_token:
+                logger.info("Authenticating with refresh token")
                 self.client = jquantsapi.Client(refresh_token=refresh_token)
             elif self.refresh_token:
+                logger.info("Authenticating with refresh token")
                 self.client = jquantsapi.Client(refresh_token=self.refresh_token)
             elif self.mail_address and self.password:
+                logger.info("Authenticating with refresh id/pass")
                 self.client = jquantsapi.Client(mail_address=self.mail_address, password=self.password)
             else:
                 raise JQuantsAPIError("No authentication credentials provided")

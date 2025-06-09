@@ -51,18 +51,6 @@ resource "google_bigquery_table" "daily_stock_prices" {
       description = "Security code"
     },
     {
-      name        = "security_name"
-      type        = "STRING"
-      mode        = "NULLABLE"
-      description = "Security name"
-    },
-    {
-      name        = "market_code"
-      type        = "STRING"
-      mode        = "NULLABLE"
-      description = "Market code"
-    },
-    {
       name        = "open_price"
       type        = "NUMERIC"
       mode        = "NULLABLE"

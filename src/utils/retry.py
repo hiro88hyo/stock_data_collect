@@ -1,10 +1,9 @@
 """Retry utilities with exponential backoff."""
-from typing import Type, Tuple, Callable, Any
+from typing import Type, Tuple, Callable
 from tenacity import (
     retry,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
     before_sleep_log,
     RetryCallState
 )
